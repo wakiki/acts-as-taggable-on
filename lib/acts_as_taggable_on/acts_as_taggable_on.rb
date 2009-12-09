@@ -24,7 +24,7 @@ module ActiveRecord
             self.class_eval do
               has_many "#{tag_type.singularize}_taggings".to_sym, :as => :taggable, :dependent => :destroy,
                 :include => :tag, :conditions => ['#{aliased_join_table_name rescue "taggings"}.context = ?',tag_type], :class_name => "Tagging"
-              has_many "#{tag_type}".to_sym, :through => "#{tag_type.singularize}_taggings".to_sym, :source => :tag
+              has_many "#{tag_type}".to_sym, :through => "#{tag_type.singularize}_taggings".to_sym, :source => :tag, :order => 'name ASC'
             end
 
             self.class_eval <<-RUBY
@@ -285,7 +285,8 @@ module ActiveRecord
           if !owner && self.class.caching_tag_list_on?(context) and !(cached_value = cached_tag_list_on(context)).nil?
             instance_variable_set("@#{var_name}", TagList.from(self["cached_#{var_name}"]))
           else
-            instance_variable_set("@#{var_name}", TagList.new(*tags_on(context, owner).map(&:name)))
+            # changed .map(&[:name]) to .map{|t|t[:name]} because of cross_site_sniper plugin
+            instance_variable_set("@#{var_name}", TagList.new(*tags_on(context, owner).map{|t|t[:name]}))
           end
         end
 
