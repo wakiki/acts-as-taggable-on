@@ -23,4 +23,12 @@ class Tag < ActiveRecord::Base
   def count
     read_attribute(:count).to_i
   end
+  
+  def self.to_fixture
+    write_file(File.expand_path("test/fixtures/#{table_name}.yml", RAILS_ROOT),
+     self.find(:all).inject("---\n") { |s, record|
+       self.columns.inject(s+"#{record.id}:\n") { |s, c|
+         s+"  #{{c.name => record.attributes[c.name]}.to_yaml[5..-1]}\n" }
+    })
+  end
 end
